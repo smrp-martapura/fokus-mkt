@@ -360,8 +360,8 @@
             <input type="text" id="kasirNama" value="Mudza" oninput="pushDataKasirFirebase()">
         </div>
         <div class="form-group">
-            <label>NIK Kasir</label>
-            <input type="text" id="kasirNik" value="26014513" oninput="pushDataKasirFirebase()">
+            <label style="color: #0f766e; font-weight: bold;">NIK Kasir (Kunci Data)</label>
+            <input type="text" id="kasirNik" value="26014513" oninput="switchKasirByNik()" style="border: 2px solid var(--accent-color); font-weight: bold;">
         </div>
     </div>
 
@@ -441,7 +441,7 @@
 <!-- Library SDK Firebase Cloud Terintegrasi -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     // Konfigurasi Akun Firebase Anda
     const firebaseConfig = {
@@ -455,9 +455,10 @@
         measurementId: "G-5PBJD9Z70L"
     };
 
-    // Inisialisasi Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    let currentKasirRef = null;
 
     // --- SINKRONISASI 1: ENGINE TABEL MKT ---
     window.pushDataMktFirebase = function() {
@@ -517,15 +518,17 @@
     });
 
 
-    // --- SINKRONISASI 2: ENGINE TABEL KASIR PSM ---
+    // --- SINKRONISASI 2: ENGINE TABEL KASIR BERDASARKAN NIK ---
     window.pushDataKasirFirebase = function() {
+        const nikKasir = document.getElementById('kasirNik').value.trim() || "anonymous";
         document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Menyimpan...";
+        
         let dataTokoKasir = {
             week: document.getElementById('kasirWeek').value,
             tanggal: document.getElementById('kasirTanggal').value,
             toko: document.getElementById('kasirToko').value,
             nama: document.getElementById('kasirNama').value,
-            nik: document.getElementById('kasirNik').value,
+            nik: nikKasir,
             rows: []
         };
 
@@ -537,38 +540,67 @@
             });
         });
 
-        set(ref(db, 'kasir_current/'), dataTokoKasir)
+        set(ref(db, 'kasir_current/' + nikKasir), dataTokoKasir)
         .then(() => { document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Tersinkronisasi ✅"; })
         .catch(() => { document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Gagal ❌"; });
     }
 
-    onValue(ref(db, 'kasir_current/'), (snapshot) => {
-        const cache = snapshot.val();
-        if (!cache) return;
-
-        if (cache.week !== undefined) document.getElementById('kasirWeek').value = cache.week;
-        if (cache.tanggal !== undefined) document.getElementById('kasirTanggal').value = cache.tanggal;
-        if (cache.toko !== undefined) document.getElementById('kasirToko').value = cache.toko;
-        if (cache.nama !== undefined) document.getElementById('kasirNama').value = cache.nama;
-        if (cache.nik !== undefined) document.getElementById('kasirNik').value = cache.nik;
-
-        if (cache.rows && cache.rows.length > 0) {
-            const rowsDOM = document.querySelectorAll('.kasir-row');
-            cache.rows.forEach((rowData, index) => {
-                if (rowsDOM[index]) {
-                    rowsDOM[index].querySelector('.deskripsi').value = rowData.deskripsi || "";
-                    rowsDOM[index].querySelector('.target-k').value = rowData.target || "";
-                    rowsDOM[index].querySelector('.actual-k').value = rowData.actual || "";
-                    
-                    const t = parseInt(rowData.target) || 0;
-                    const a = parseInt(rowData.actual) || 0;
-                    let sisa = t - a;
-                    rowsDOM[index].querySelector('.text-hutang').innerText = sisa < 0 ? 0 : sisa;
-                }
-            });
+    // Fungsi untuk memutus real-time listener lama dan mendengarkan NIK yang baru dimasukkan
+    window.switchKasirByNik = function() {
+        const nikKasir = document.getElementById('kasirNik').value.trim() || "anonymous";
+        
+        // Putus koneksi lama jika ada
+        if (currentKasirRef) {
+            off(currentKasirRef);
         }
-        document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Tersinkronisasi ✅";
-    });
+
+        document.getElementById('cloudStatusKasir').innerText = "Membuka Data NIK: " + nikKasir + "...";
+        
+        // Tunjuk alamat database baru sesuai NIK
+        currentKasirRef = ref(db, 'kasir_current/' + nikKasir);
+
+        onValue(currentKasirRef, (snapshot) => {
+            const cache = snapshot.val();
+            
+            // Jika data NIK baru kosong di Firebase, bersihkan tabel inputan kasir di layar
+            if (!cache) {
+                document.querySelectorAll('.kasir-row').forEach(row => {
+                    row.querySelector('.deskripsi').value = "";
+                    row.querySelector('.target-k').value = "";
+                    row.querySelector('.actual-k').value = "";
+                    row.querySelector('.text-hutang').innerText = "0";
+                });
+                document.getElementById('cloudStatusKasir').innerText = "Data NIK Baru Kosong (Siap Diisi) ✅";
+                return;
+            }
+
+            // Jika datanya ada, langsung isikan ke tabel
+            if (cache.week !== undefined) document.getElementById('kasirWeek').value = cache.week;
+            if (cache.tanggal !== undefined) document.getElementById('kasirTanggal').value = cache.tanggal;
+            if (cache.toko !== undefined) document.getElementById('kasirToko').value = cache.toko;
+            if (cache.nama !== undefined) document.getElementById('kasirNama').value = cache.nama;
+
+            if (cache.rows && cache.rows.length > 0) {
+                const rowsDOM = document.querySelectorAll('.kasir-row');
+                cache.rows.forEach((rowData, index) => {
+                    if (rowsDOM[index]) {
+                        rowsDOM[index].querySelector('.deskripsi').value = rowData.deskripsi || "";
+                        rowsDOM[index].querySelector('.target-k').value = rowData.target || "";
+                        rowsDOM[index].querySelector('.actual-k').value = rowData.actual || "";
+                        
+                        const t = parseInt(rowData.target) || 0;
+                        const a = parseInt(rowData.actual) || 0;
+                        let sisa = t - a;
+                        rowsDOM[index].querySelector('.text-hutang').innerText = sisa < 0 ? 0 : sisa;
+                    }
+                });
+            }
+            document.getElementById('cloudStatusKasir').innerText = "Data Terbuka Sesuai NIK ✅";
+        });
+    }
+
+    // Jalankan deteksi pertama kali saat aplikasi dibuka
+    window.switchKasirByNik();
 
     // Jalur Komunikasi Sinkronisasi Database Log Riwayat
     window.saveRiwayatFirebase = function(nodeRef, data) {
@@ -647,7 +679,7 @@
         let teksHasil = `Laporan fokus MKT dengan Format,,\n\nToko : ${toko}\nNama : ${nama}\nNik : ${nik}\n\n`;
         
         let dataLog = {
-            id: Date.now().toString(), // ID Unik berbasis waktu untuk penanda hapus per baris
+            id: Date.now().toString(),
             toko: toko, nama: nama,
             waktu: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
             items: {}
@@ -685,7 +717,6 @@
         
         list.slice(0, 10).forEach((log, index) => {
             let tr = document.createElement("tr");
-            // Cari pencocokan ID unik, jika tidak ada pakai index cadangan
             let logId = log.id ? `"${log.id}"` : index;
             tr.innerHTML = `
                 <td><span class="timestamp">${log.waktu}</span><br><strong>${log.toko}</strong><br><small>${log.nama}</small></td>
@@ -702,7 +733,7 @@
     }
 
     function resetFormKasir() {
-        if(confirm("Kosongkan semua isi deskripsi, target, dan actual di tabel kasir?")) {
+        if(confirm("Kosongkan semua isi deskripsi, target, dan actual di tabel kasir saat ini?")) {
             document.querySelectorAll('.kasir-row').forEach(row => {
                 row.querySelector('.deskripsi').value = "";
                 row.querySelector('.target-k').value = "";
@@ -729,7 +760,7 @@
         let teksHasil = `Laporan Kasir Fokus PSM\nWeek : ${week}\nTanggal : ${tglFormatted}\n\nNama : ${nama}\nNik : ${nik}\nToko : ${toko}\n\nFormat laporan : Item/Target/Actual/Sisa Hutang\n\n`;
         
         let dataLog = {
-            id: Date.now().toString(), // ID Unik berbasis waktu untuk penanda hapus per baris
+            id: Date.now().toString(),
             toko: toko, nama: nama, week: week,
             waktu: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
             itemsArray: []
@@ -789,19 +820,16 @@
         });
     }
 
-    // --- ENGINE BARU: HAPUS RIWAYAT SATU PER SATU ---
     function hapusSatuRiwayat(jenis, targetId) {
         if (confirm(`Hapus baris riwayat ${jenis.toUpperCase()} ini dari cloud?`)) {
             let list = JSON.parse(localStorage.getItem(`riwayat_${jenis}`)) || [];
             
-            // Lakukan filter eliminasi baris berdasarkan ID unik / index array
             if (typeof targetId === "string") {
                 list = list.filter(item => item.id !== targetId);
             } else {
                 list.splice(targetId, 1);
             }
             
-            // Simpan ulang status terbaru ke lokal & tembak update ke Firebase Cloud
             localStorage.setItem(`riwayat_${jenis}`, JSON.stringify(list));
             window.saveRiwayatFirebase(jenis, list);
         }
