@@ -260,19 +260,20 @@
 <!-- ================= MODUL 1: LAPORAN FOKUS MKT ================= -->
 <div class="container">
     <h1>Input Laporan Fokus MKT</h1>
+    <div class="cloud-status" id="cloudStatusMkt">Cloud Sync: Menghubungkan...</div>
     
     <div class="form-inline">
         <div class="form-group">
             <label>Toko</label>
-            <input type="text" id="toko" value="Simpang Martapura 1GCX">
+            <input type="text" id="toko" value="Simpang Martapura 1GCX" oninput="pushDataMktFirebase()">
         </div>
         <div class="form-group">
             <label>Nama Personil</label>
-            <input type="text" id="nama" value="Mudza">
+            <input type="text" id="nama" value="Mudza" oninput="pushDataMktFirebase()">
         </div>
         <div class="form-group">
             <label>NIK</label>
-            <input type="text" id="nik" value="26014513">
+            <input type="text" id="nik" value="26014513" oninput="pushDataMktFirebase()">
         </div>
     </div>
 
@@ -289,38 +290,38 @@
             <tbody>
                 <tr class="mkt-row" data-name="PSM">
                     <td><strong>PSM</strong></td>
-                    <td style="text-align: center;"><input type="number" class="input-table target" value="24" oninput="hitungPersen(this)"></td>
-                    <td style="text-align: center;"><input type="number" class="input-table actual" value="13" oninput="hitungPersen(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table target" value="24" oninput="jalankanUbahMkt(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table actual" value="13" oninput="jalankanUbahMkt(this)"></td>
                     <td class="percentage-cell text-persen" style="color: #f59e0b;">54%</td>
                 </tr>
                 <tr class="mkt-row" data-name="PWP">
                     <td><strong>PWP</strong></td>
-                    <td style="text-align: center;"><input type="number" class="input-table target" value="12" oninput="hitungPersen(this)"></td>
-                    <td style="text-align: center;"><input type="number" class="input-table actual" value="8" oninput="hitungPersen(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table target" value="12" oninput="jalankanUbahMkt(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table actual" value="8" oninput="jalankanUbahMkt(this)"></td>
                     <td class="percentage-cell text-persen" style="color: #10b981;">66%</td>
                 </tr>
                 <tr class="mkt-row" data-name="Serba">
                     <td><strong>Serba</strong></td>
-                    <td style="text-align: center;"><input type="number" class="input-table target" value="7" oninput="hitungPersen(this)"></td>
-                    <td style="text-align: center;"><input type="number" class="input-table actual" value="3" oninput="hitungPersen(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table target" value="7" oninput="jalankanUbahMkt(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table actual" value="3" oninput="jalankanUbahMkt(this)"></td>
                     <td class="percentage-cell text-persen" style="color: #ef4444;">42%</td>
                 </tr>
                 <tr class="mkt-row" data-name="Suueger">
                     <td><strong>Suueger</strong></td>
-                    <td style="text-align: center;"><input type="number" class="input-table target" value="10" oninput="hitungPersen(this)"></td>
-                    <td style="text-align: center;"><input type="number" class="input-table actual" value="6" oninput="hitungPersen(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table target" value="10" oninput="jalankanUbahMkt(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table actual" value="6" oninput="jalankanUbahMkt(this)"></td>
                     <td class="percentage-cell text-persen" style="color: #10b981;">60%</td>
                 </tr>
                 <tr class="mkt-row" data-name="Cashback">
                     <td><strong>Cashback</strong></td>
-                    <td style="text-align: center;"><input type="number" class="input-table target" value="" placeholder="-" oninput="hitungPersen(this)"></td>
-                    <td style="text-align: center;"><input type="number" class="input-table actual" value="" placeholder="-" oninput="hitungPersen(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table target" value="" placeholder="-" oninput="jalankanUbahMkt(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table actual" value="" placeholder="-" oninput="jalankanUbahMkt(this)"></td>
                     <td class="percentage-cell text-persen">-</td>
                 </tr>
                 <tr class="mkt-row" data-name="Voucher">
                     <td><strong>Voucher</strong></td>
-                    <td style="text-align: center;"><input type="number" class="input-table target" value="" placeholder="-" oninput="hitungPersen(this)"></td>
-                    <td style="text-align: center;"><input type="number" class="input-table actual" value="" placeholder="-" oninput="hitungPersen(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table target" value="" placeholder="-" oninput="jalankanUbahMkt(this)"></td>
+                    <td style="text-align: center;"><input type="number" class="input-table actual" value="" placeholder="-" oninput="jalankanUbahMkt(this)"></td>
                     <td class="percentage-cell text-persen">-</td>
                 </tr>
             </tbody>
@@ -337,7 +338,7 @@
 <!-- ================= MODUL 2: LAPORAN KASIR FOKUS PSM ================= -->
 <div class="container">
     <h1 style="color: var(--accent-color); border-bottom-color: #ccfbf1;">Input Laporan Kasir Fokus PSM</h1>
-    <div class="cloud-status" id="cloudStatus">Cloud Sync: Menghubungkan...</div>
+    <div class="cloud-status" id="cloudStatusKasir">Cloud Sync: Menghubungkan...</div>
     <button class="btn-reset-form" onclick="resetFormKasir()">Kosongkan Tabel</button>
     
     <div class="form-inline" style="background: #f0fdfa;">
@@ -436,12 +437,12 @@
     </div>
 </div>
 
-<!-- Library Utama Firebase Cloud Terintegrasi -->
+<!-- Library SDK Firebase Cloud Terintegrasi -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // Konfigurasi Database Milik Anda Langsung Terpasang
+    // Konfigurasi Akun Firebase Anda
     const firebaseConfig = {
         apiKey: "AIzaSyDaq7Fh8b8qL_ImdOa43z7K9WpOQAEqwLg",
         authDomain: "fokus-mkt-46f09.firebaseapp.com",
@@ -457,10 +458,68 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Kirim fungsi Firebase ke window global agar bisa dibaca oleh script input tabel
+    // --- SINKRONISASI 1: ENGINE TABEL MKT (BARU) ---
+    window.pushDataMktFirebase = function() {
+        document.getElementById('cloudStatusMkt').innerText = "Cloud Sync: Menyimpan...";
+        let dataMkt = {
+            toko: document.getElementById('toko').value,
+            nama: document.getElementById('nama').value,
+            nik: document.getElementById('nik').value,
+            rows: {}
+        };
+
+        document.querySelectorAll('.mkt-row').forEach(row => {
+            const name = row.getAttribute('data-name');
+            dataMkt.rows[name] = {
+                target: row.querySelector('.target').value,
+                actual: row.querySelector('.actual').value
+            };
+        });
+
+        set(ref(db, 'mkt_current/'), dataMkt)
+        .then(() => { document.getElementById('cloudStatusMkt').innerText = "Cloud Sync: Tersinkronisasi ✅"; })
+        .catch(() => { document.getElementById('cloudStatusMkt').innerText = "Cloud Sync: Gagal ❌"; });
+    }
+
+    onValue(ref(db, 'mkt_current/'), (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        if(data.toko !== undefined) document.getElementById('toko').value = data.toko;
+        if(data.nama !== undefined) document.getElementById('nama').value = data.nama;
+        if(data.nik !== undefined) document.getElementById('nik').value = data.nik;
+
+        if(data.rows) {
+            document.querySelectorAll('.mkt-row').forEach(row => {
+                const name = row.getAttribute('data-name');
+                if(data.rows[name]) {
+                    row.querySelector('.target').value = data.rows[name].target || "";
+                    row.querySelector('.actual').value = data.rows[name].actual || "";
+                    
+                    // Trigger pembaruan persentase visual lokal
+                    const targetVal = parseFloat(data.rows[name].target);
+                    const actualVal = parseFloat(data.rows[name].actual);
+                    const cellPersen = row.querySelector('.text-persen');
+                    if (!isNaN(targetVal) && !isNaN(actualVal) && targetVal > 0) {
+                        const hasil = Math.round((actualVal / targetVal) * 100);
+                        cellPersen.innerText = hasil + "%";
+                        if(hasil >= 60) cellPersen.style.color = "#10b981";
+                        else if(hasil >= 50) cellPersen.style.color = "#f59e0b";
+                        else cellPersen.style.color = "#ef4444";
+                    } else {
+                        cellPersen.innerText = "-";
+                        cellPersen.style.color = "var(--text-main)";
+                    }
+                }
+            });
+        }
+        document.getElementById('cloudStatusMkt').innerText = "Cloud Sync: Tersinkronisasi ✅";
+    });
+
+
+    // --- SINKRONISASI 2: ENGINE TABEL KASIR PSM ---
     window.pushDataKasirFirebase = function() {
-        document.getElementById('cloudStatus').innerText = "Cloud Sync: Menyimpan...";
-        
+        document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Menyimpan...";
         let dataTokoKasir = {
             week: document.getElementById('kasirWeek').value,
             tanggal: document.getElementById('kasirTanggal').value,
@@ -478,17 +537,11 @@
             });
         });
 
-        // Tembak data tabel aktif ke cloud real-time
         set(ref(db, 'kasir_current/'), dataTokoKasir)
-        .then(() => {
-            document.getElementById('cloudStatus').innerText = "Cloud Sync: Tersinkronisasi ✅";
-        })
-        .catch(() => {
-            document.getElementById('cloudStatus').innerText = "Cloud Sync: Gagal Koneksi ❌";
-        });
+        .then(() => { document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Tersinkronisasi ✅"; })
+        .catch(() => { document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Gagal ❌"; });
     }
 
-    // Dengarkan perubahan database (Bila HP lain ngetik, HP ini ikut ter-update otomatis)
     onValue(ref(db, 'kasir_current/'), (snapshot) => {
         const cache = snapshot.val();
         if (!cache) return;
@@ -507,7 +560,6 @@
                     rowsDOM[index].querySelector('.target-k').value = rowData.target || "";
                     rowsDOM[index].querySelector('.actual-k').value = rowData.actual || "";
                     
-                    // Otomatisasi hitung sisa hutang real-time
                     const t = parseInt(rowData.target) || 0;
                     const a = parseInt(rowData.actual) || 0;
                     let sisa = t - a;
@@ -515,10 +567,10 @@
                 }
             });
         }
-        document.getElementById('cloudStatus').innerText = "Cloud Sync: Tersinkronisasi ✅";
+        document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Tersinkronisasi ✅";
     });
 
-    // Manajemen Sinkronisasi Log Riwayat Cetak Cetak
+    // Jalur Komunikasi Database Log Riwayat
     window.saveRiwayatFirebase = function(nodeRef, data) {
         set(ref(db, 'riwayat_' + nodeRef + '/'), data);
     }
@@ -535,14 +587,14 @@
 </script>
 
 <script>
-    // --- ENGINE LOGIKA UTILITY ---
+    // --- MANAJEMEN LOGIKA UTILITY INTERNAL ---
     document.addEventListener("DOMContentLoaded", () => {
         const hariIni = new Date().toISOString().split('T')[0];
         document.getElementById('kasirTanggal').value = hariIni;
         
         if ('serviceWorker' in navigator) {
             const swCode = `
-                const CACHE_NAME = 'mkt-kasir-cloud-v2';
+                const CACHE_NAME = 'mkt-kasir-cloud-v3';
                 self.addEventListener('install', e => {
                     e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./', './index.html'])));
                 });
@@ -555,6 +607,11 @@
         }
     });
 
+    function jalankanUbahMkt(input) {
+        hitungPersen(input);
+        window.pushDataMktFirebase(); // Kirim ke cloud saat diketik
+    }
+
     function jalankanUbahKasir(input) {
         const row = input.closest('.kasir-row');
         const targetVal = parseInt(row.querySelector('.target-k').value) || 0;
@@ -562,8 +619,7 @@
         let hitungSisa = targetVal - actualVal;
         row.querySelector('.text-hutang').innerText = hitungSisa < 0 ? 0 : hitungSisa;
         
-        // Push otomatis ke Firebase cloud
-        window.pushDataKasirFirebase();
+        window.pushDataKasirFirebase(); // Kirim ke cloud saat diketik
     }
 
     function hitungPersen(input) {
@@ -639,7 +695,6 @@
         });
     }
 
-    // Kosongkan tabel lokal & database pusat
     function resetFormKasir() {
         if(confirm("Kosongkan semua isi deskripsi, target, dan actual di tabel kasir?")) {
             document.querySelectorAll('.kasir-row').forEach(row => {
