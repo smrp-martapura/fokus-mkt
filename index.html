@@ -184,18 +184,19 @@
         .history-table th { background-color: #475569; }
         .history-table td { font-size: 12px; }
         
-        .btn-clear {
+        .btn-clear-row {
             background-color: #ef4444;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 5px 8px;
             font-size: 12px;
             border-radius: 4px;
             cursor: pointer;
-            float: right;
-            margin-top: -40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .btn-clear:hover { background-color: #dc2626; }
+        .btn-clear-row:hover { background-color: #dc2626; }
         
         .btn-reset-form {
             background-color: #64748b;
@@ -404,7 +405,6 @@
     <h1 style="font-size: 18px; color: #475569; border-bottom: 2px solid #cbd5e1;">Riwayat Penyimpanan Cloud (Semua HP)</h1>
     
     <h2>Riwayat Laporan MKT</h2>
-    <button class="btn-clear" onclick="hapusRiwayat('mkt')">Hapus MKT</button>
     <div class="table-container">
         <table class="history-table">
             <thead>
@@ -414,6 +414,7 @@
                     <th style="text-align: center;">PWP</th>
                     <th style="text-align: center;">Serba</th>
                     <th style="text-align: center;">Suueger</th>
+                    <th style="text-align: center; width: 50px;">Aksi</th>
                 </tr>
             </thead>
             <tbody id="historyMktBody"></tbody>
@@ -423,13 +424,13 @@
     <div class="divider"></div>
 
     <h2>Riwayat Laporan Kasir PSM</h2>
-    <button class="btn-clear" onclick="hapusRiwayat('kasir')">Hapus Kasir</button>
     <div class="table-container">
         <table class="history-table">
             <thead>
                 <tr>
                     <th>Waktu / Profil / Week</th>
                     <th>Detail Item Terjual (Deskripsi: Target/Actual/Sisa)</th>
+                    <th style="text-align: center; width: 50px;">Aksi</th>
                 </tr>
             </thead>
             <tbody id="historyKasirBody"></tbody>
@@ -458,7 +459,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- SINKRONISASI 1: ENGINE TABEL MKT (BARU) ---
+    // --- SINKRONISASI 1: ENGINE TABEL MKT ---
     window.pushDataMktFirebase = function() {
         document.getElementById('cloudStatusMkt').innerText = "Cloud Sync: Menyimpan...";
         let dataMkt = {
@@ -496,7 +497,6 @@
                     row.querySelector('.target').value = data.rows[name].target || "";
                     row.querySelector('.actual').value = data.rows[name].actual || "";
                     
-                    // Trigger pembaruan persentase visual lokal
                     const targetVal = parseFloat(data.rows[name].target);
                     const actualVal = parseFloat(data.rows[name].actual);
                     const cellPersen = row.querySelector('.text-persen');
@@ -570,7 +570,7 @@
         document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Tersinkronisasi ✅";
     });
 
-    // Jalur Komunikasi Database Log Riwayat
+    // Jalur Komunikasi Sinkronisasi Database Log Riwayat
     window.saveRiwayatFirebase = function(nodeRef, data) {
         set(ref(db, 'riwayat_' + nodeRef + '/'), data);
     }
@@ -594,7 +594,7 @@
         
         if ('serviceWorker' in navigator) {
             const swCode = `
-                const CACHE_NAME = 'mkt-kasir-cloud-v3';
+                const CACHE_NAME = 'mkt-kasir-cloud-v4';
                 self.addEventListener('install', e => {
                     e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./', './index.html'])));
                 });
@@ -609,7 +609,7 @@
 
     function jalankanUbahMkt(input) {
         hitungPersen(input);
-        window.pushDataMktFirebase(); // Kirim ke cloud saat diketik
+        window.pushDataMktFirebase();
     }
 
     function jalankanUbahKasir(input) {
@@ -619,7 +619,7 @@
         let hitungSisa = targetVal - actualVal;
         row.querySelector('.text-hutang').innerText = hitungSisa < 0 ? 0 : hitungSisa;
         
-        window.pushDataKasirFirebase(); // Kirim ke cloud saat diketik
+        window.pushDataKasirFirebase();
     }
 
     function hitungPersen(input) {
@@ -647,6 +647,7 @@
         let teksHasil = `Laporan fokus MKT dengan Format,,\n\nToko : ${toko}\nNama : ${nama}\nNik : ${nik}\n\n`;
         
         let dataLog = {
+            id: Date.now().toString(), // ID Unik berbasis waktu untuk penanda hapus per baris
             toko: toko, nama: nama,
             waktu: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
             items: {}
@@ -680,16 +681,21 @@
     function renderMktRiwayatHTML(list) {
         localStorage.setItem("riwayat_mkt", JSON.stringify(list));
         const tbody = document.getElementById("historyMktBody");
-        tbody.innerHTML = list.length === 0 ? `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Belum ada riwayat.</td></tr>` : "";
+        tbody.innerHTML = list.length === 0 ? `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">Belum ada riwayat.</td></tr>` : "";
         
-        list.slice(0, 10).forEach(log => {
+        list.slice(0, 10).forEach((log, index) => {
             let tr = document.createElement("tr");
+            // Cari pencocokan ID unik, jika tidak ada pakai index cadangan
+            let logId = log.id ? `"${log.id}"` : index;
             tr.innerHTML = `
                 <td><span class="timestamp">${log.waktu}</span><br><strong>${log.toko}</strong><br><small>${log.nama}</small></td>
                 <td style="text-align: center;">${log.items["PSM"] || '-'}</td>
                 <td style="text-align: center;">${log.items["PWP"] || '-'}</td>
                 <td style="text-align: center;">${log.items["Serba"] || '-'}</td>
                 <td style="text-align: center;">${log.items["Suueger"] || '-'}</td>
+                <td style="text-align: center;">
+                    <button class="btn-clear-row" onclick='hapusSatuRiwayat("mkt", ${logId})'>🗑️</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
@@ -723,6 +729,7 @@
         let teksHasil = `Laporan Kasir Fokus PSM\nWeek : ${week}\nTanggal : ${tglFormatted}\n\nNama : ${nama}\nNik : ${nik}\nToko : ${toko}\n\nFormat laporan : Item/Target/Actual/Sisa Hutang\n\n`;
         
         let dataLog = {
+            id: Date.now().toString(), // ID Unik berbasis waktu untuk penanda hapus per baris
             toko: toko, nama: nama, week: week,
             waktu: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
             itemsArray: []
@@ -765,30 +772,45 @@
     function renderKasirRiwayatHTML(list) {
         localStorage.setItem("riwayat_kasir", JSON.stringify(list));
         const tbody = document.getElementById("historyKasirBody");
-        tbody.innerHTML = list.length === 0 ? `<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Belum ada riwayat kasir.</td></tr>` : "";
+        tbody.innerHTML = list.length === 0 ? `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Belum ada riwayat kasir.</td></tr>` : "";
         
-        list.slice(0, 10).forEach(log => {
+        list.slice(0, 10).forEach((log, index) => {
             let tr = document.createElement("tr");
             let itemsHTML = log.itemsArray ? log.itemsArray.map(item => `• ${item}`).join('<br>') : '';
+            let logId = log.id ? `"${log.id}"` : index;
             tr.innerHTML = `
                 <td><span class="timestamp">${log.waktu}</span><br><strong>${log.toko}</strong><br><small>Kasir: ${log.nama} (Wk ${log.week})</small></td>
                 <td style="line-height: 1.5; color: var(--accent-color);">${itemsHTML}</td>
+                <td style="text-align: center;">
+                    <button class="btn-clear-row" onclick='hapusSatuRiwayat("kasir", ${logId})'>🗑️</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
+    }
+
+    // --- ENGINE BARU: HAPUS RIWAYAT SATU PER SATU ---
+    function hapusSatuRiwayat(jenis, targetId) {
+        if (confirm(`Hapus baris riwayat ${jenis.toUpperCase()} ini dari cloud?`)) {
+            let list = JSON.parse(localStorage.getItem(`riwayat_${jenis}`)) || [];
+            
+            // Lakukan filter eliminasi baris berdasarkan ID unik / index array
+            if (typeof targetId === "string") {
+                list = list.filter(item => item.id !== targetId);
+            } else {
+                list.splice(targetId, 1);
+            }
+            
+            // Simpan ulang status terbaru ke lokal & tembak update ke Firebase Cloud
+            localStorage.setItem(`riwayat_${jenis}`, JSON.stringify(list));
+            window.saveRiwayatFirebase(jenis, list);
+        }
     }
 
     function notifikasiSukses(idNotif) {
         const notif = document.getElementById(idNotif);
         notif.style.display = 'block';
         setTimeout(() => { notif.style.display = 'none'; }, 3500);
-    }
-
-    function hapusRiwayat(jenis) {
-        if(confirm(`Hapus semua riwayat cloud ${jenis.toUpperCase()}?`)) {
-            localStorage.removeItem(`riwayat_${jenis}`);
-            window.saveRiwayatFirebase(jenis, []);
-        }
     }
 
     let deferredPrompt;
