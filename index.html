@@ -86,7 +86,7 @@
             color: var(--text-main);
         }
 
-        input[type="text"], input[type="number"], input[type="date"] {
+        input[type="text"], input[type="number"], input[type="date"], select {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid var(--border-color);
@@ -96,7 +96,7 @@
             background-color: #ffffff;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: var(--secondary-color);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
@@ -356,12 +356,16 @@
             <input type="text" id="kasirToko" value="Simpang Martapura 1GCX" oninput="pushDataKasirFirebase()">
         </div>
         <div class="form-group">
-            <label>Nama Kasir</label>
-            <input type="text" id="kasirNama" value="Mudza" oninput="pushDataKasirFirebase()">
+            <label style="color: #0f766e; font-weight: bold;">Pilih NIK Kasir</label>
+            <select id="kasirNik" onchange="autoFillKasirNama(); switchKasirByNik();" style="border: 2px solid var(--accent-color); font-weight: bold; background-color: #e6fffa;">
+                <option value="26014513">26014513 (Mudza)</option>
+                <option value="26014456">26014456 (Sholahudin)</option>
+                <option value="26012274">26012274 (Shinta)</option>
+            </select>
         </div>
         <div class="form-group">
-            <label style="color: #0f766e; font-weight: bold;">NIK Kasir (Kunci Data)</label>
-            <input type="text" id="kasirNik" value="26014513" oninput="switchKasirByNik()" style="border: 2px solid var(--accent-color); font-weight: bold;">
+            <label>Nama Kasir</label>
+            <input type="text" id="kasirNama" value="Mudza" readonly style="background-color: #e2e8f0; color: #475569; font-weight: 500;">
         </div>
     </div>
 
@@ -518,9 +522,9 @@
     });
 
 
-    // --- SINKRONISASI 2: ENGINE TABEL KASIR BERDASARKAN NIK ---
+    // --- SINKRONISASI 2: ENGINE TABEL KASIR BERDASARKAN NIK (DROP-DOWN) ---
     window.pushDataKasirFirebase = function() {
-        const nikKasir = document.getElementById('kasirNik').value.trim() || "anonymous";
+        const nikKasir = document.getElementById('kasirNik').value;
         document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Menyimpan...";
         
         let dataTokoKasir = {
@@ -545,24 +549,19 @@
         .catch(() => { document.getElementById('cloudStatusKasir').innerText = "Cloud Sync: Gagal ❌"; });
     }
 
-    // Fungsi untuk memutus real-time listener lama dan mendengarkan NIK yang baru dimasukkan
     window.switchKasirByNik = function() {
-        const nikKasir = document.getElementById('kasirNik').value.trim() || "anonymous";
+        const nikKasir = document.getElementById('kasirNik').value;
         
-        // Putus koneksi lama jika ada
         if (currentKasirRef) {
             off(currentKasirRef);
         }
 
-        document.getElementById('cloudStatusKasir').innerText = "Membuka Data NIK: " + nikKasir + "...";
-        
-        // Tunjuk alamat database baru sesuai NIK
+        document.getElementById('cloudStatusKasir').innerText = "Memuat Data NIK: " + nikKasir + "...";
         currentKasirRef = ref(db, 'kasir_current/' + nikKasir);
 
         onValue(currentKasirRef, (snapshot) => {
             const cache = snapshot.val();
             
-            // Jika data NIK baru kosong di Firebase, bersihkan tabel inputan kasir di layar
             if (!cache) {
                 document.querySelectorAll('.kasir-row').forEach(row => {
                     row.querySelector('.deskripsi').value = "";
@@ -574,11 +573,9 @@
                 return;
             }
 
-            // Jika datanya ada, langsung isikan ke tabel
             if (cache.week !== undefined) document.getElementById('kasirWeek').value = cache.week;
             if (cache.tanggal !== undefined) document.getElementById('kasirTanggal').value = cache.tanggal;
             if (cache.toko !== undefined) document.getElementById('kasirToko').value = cache.toko;
-            if (cache.nama !== undefined) document.getElementById('kasirNama').value = cache.nama;
 
             if (cache.rows && cache.rows.length > 0) {
                 const rowsDOM = document.querySelectorAll('.kasir-row');
@@ -619,10 +616,23 @@
 </script>
 
 <script>
+    // --- DATABASE DAFTAR NIK INTERNAL ---
+    const daftarKaryawan = {
+        "26014513": "Mudza",
+        "26014456": "Sholahudin",
+        "26012274": "Shinta"
+    };
+
+    function autoFillKasirNama() {
+        const selectNik = document.getElementById('kasirNik').value;
+        document.getElementById('kasirNama').value = daftarKaryawan[selectNik] || "";
+    }
+
     // --- MANAJEMEN LOGIKA UTILITY INTERNAL ---
     document.addEventListener("DOMContentLoaded", () => {
         const hariIni = new Date().toISOString().split('T')[0];
         document.getElementById('kasirTanggal').value = hariIni;
+        autoFillKasirNama(); // Jalankan auto fill saat pertama buka halaman
         
         if ('serviceWorker' in navigator) {
             const swCode = `
